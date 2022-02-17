@@ -156,7 +156,7 @@ class Trimmer {
   /// video format is passed in [customVideoFormat], then the app may
   /// crash.
   ///
-  Future<void> saveTrimmedVideo({
+  Future<String?> saveTrimmedVideo({
     required double startValue,
     required double endValue,
     required Function(String? outputPath) onSave,
@@ -240,22 +240,24 @@ class Trimmer {
 
     _command += '"$_outputPath"';
 
-    FFmpegKit.executeAsync(_command, (session) async {
-      final state = FFmpegKitConfig.sessionStateToString(await session.getState());
-      final returnCode = await session.getReturnCode();
+    final session = await FFmpegKit.execute(_command);
+    final state = FFmpegKitConfig.sessionStateToString(await session.getState());
+    final returnCode = await session.getReturnCode();
 
-      debugPrint("FFmpeg process exited with state $state and rc $returnCode");
+    debugPrint("FFmpeg process exited with state $state and rc $returnCode");
 
-      if (ReturnCode.isSuccess(returnCode)) {
-        debugPrint("FFmpeg processing completed successfully.");
-        debugPrint('Video successfuly saved');
-        onSave(_outputPath);
-      } else {
-        debugPrint("FFmpeg processing failed.");
-        debugPrint('Couldn\'t save the video');
-        onSave(null);
-      }
-    });
+    if (ReturnCode.isSuccess(returnCode)) {
+      debugPrint("FFmpeg processing completed successfully.");
+      debugPrint('Video successfuly saved');
+      // onSave(_outputPath);
+      return _outputPath;
+    } else {
+      debugPrint("FFmpeg processing failed.");
+      debugPrint('Couldn\'t save the video');
+      onSave(null);
+    }
+
+    return null;
 
     // return _outputPath;
   }
