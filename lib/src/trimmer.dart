@@ -258,8 +258,67 @@ class Trimmer {
     }
 
     return null;
+  }
 
-    // return _outputPath;
+  Future<String?> saveCompressedVideo() async {
+    final String _videoPath = currentVideoFile!.path;
+    final String _videoName = basename(_videoPath).split('.')[0];
+
+    String _command;
+
+    // Formatting Date and Time
+    String dateTime = DateFormat.yMMMd().addPattern('-').add_Hms().format(DateTime.now()).toString();
+
+    // String _resultString;
+    String _outputPath;
+    String? _outputFormatString;
+    String formattedDateTime = dateTime.replaceAll(' ', '');
+
+    debugPrint("DateTime: $dateTime");
+    debugPrint("Formatted: $formattedDateTime");
+
+    String videoFolderName = "Trimmer";
+
+    String videoFileName = "${_videoName}_trimmed:$formattedDateTime";
+
+    videoFileName = videoFileName.replaceAll(' ', '_');
+
+    String path = await _createFolderInAppDocDir(
+      videoFolderName,
+      null,
+    ).whenComplete(
+      () => debugPrint("Retrieved Trimmer folder"),
+    );
+
+    debugPrint(path);
+
+    FileFormat outputFormat = FileFormat.mp4;
+    _outputFormatString = outputFormat.toString();
+    debugPrint('OUTPUT: $_outputFormatString');
+
+    _command = ' -i "$_videoPath" -c:a copy -c:v copy ';
+
+    _outputPath = '$path$videoFileName$_outputFormatString';
+
+    _command += '"$_outputPath"';
+
+    final session = await FFmpegKit.execute(_command);
+    final state = FFmpegKitConfig.sessionStateToString(await session.getState());
+    final returnCode = await session.getReturnCode();
+
+    debugPrint("FFmpeg process exited with state $state and rc $returnCode");
+
+    if (ReturnCode.isSuccess(returnCode)) {
+      debugPrint("FFmpeg processing completed successfully.");
+      debugPrint('Video successfuly saved');
+      // onSave(_outputPath);
+      return _outputPath;
+    } else {
+      debugPrint("FFmpeg processing failed.");
+      debugPrint('Couldn\'t save the video');
+    }
+
+    return null;
   }
 
   /// For getting the video controller state, to know whether the
