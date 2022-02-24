@@ -260,7 +260,7 @@ class Trimmer {
     return null;
   }
 
-  Future<String?> saveCompressedVideo() async {
+  Future<String?> saveCompressedVideo(String formatCommand) async {
     final String _videoPath = currentVideoFile!.path;
     final String _videoName = basename(_videoPath).split('.')[0];
 
@@ -296,7 +296,7 @@ class Trimmer {
     _outputFormatString = outputFormat.toString();
     debugPrint('OUTPUT: $_outputFormatString');
 
-    _command = ' -i "$_videoPath" -c:a copy -c:v copy ';
+    _command = ' -i "$_videoPath" $formatCommand ';
 
     _outputPath = '$path$videoFileName$_outputFormatString';
 
