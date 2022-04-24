@@ -19,6 +19,7 @@ class FileFormat {
   static const FileFormat avi = FileFormat._(4);
   static const FileFormat wmv = FileFormat._(5);
   static const FileFormat gif = FileFormat._(6);
+  static const FileFormat m3u8 = FileFormat._(7);
 
   static const List<FileFormat> values = <FileFormat>[
     mp4,
@@ -28,6 +29,7 @@ class FileFormat {
     avi,
     wmv,
     gif,
+    m3u8,
   ];
 
   @override
@@ -40,6 +42,7 @@ class FileFormat {
       4: '.avi',
       5: '.wmv',
       6: '.gif',
+      7: '.m3u8',
     }[index]!;
   }
 }

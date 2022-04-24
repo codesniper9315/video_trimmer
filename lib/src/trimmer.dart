@@ -321,6 +321,76 @@ class Trimmer {
     return null;
   }
 
+  Future<List<String>?> convertVideoToStream() async {
+    final String _videoPath = currentVideoFile!.path;
+    final String _videoName = basename(_videoPath).split('.')[0];
+
+    String _command;
+
+    // Formatting Date and Time
+    String dateTime = DateFormat.yMMMd().addPattern('-').add_Hms().format(DateTime.now()).toString();
+
+    // String _resultString;
+    String _outputPath;
+    String? _outputFormatString;
+    String formattedDateTime = dateTime.replaceAll(' ', '');
+
+    debugPrint("DateTime: $dateTime");
+    debugPrint("Formatted: $formattedDateTime");
+
+    String videoFolderName = "Trimmer";
+
+    String videoFileName = "${_videoName}_trimmed:$formattedDateTime";
+
+    videoFileName = videoFileName.replaceAll(' ', '_');
+
+    String path = await _createFolderInAppDocDir(
+      videoFolderName,
+      null,
+    ).whenComplete(
+      () => debugPrint("Retrieved Trimmer folder"),
+    );
+
+    debugPrint(path);
+
+    FileFormat outputFormat = FileFormat.m3u8;
+    _outputFormatString = outputFormat.toString();
+    debugPrint('OUTPUT: $_outputFormatString');
+
+    _command = ' -i "$_videoPath" -b:v 1M -g 60 -hls_time 2 -hls_list_size 0 -hls_segment_size 500000 ';
+
+    _outputPath = '$path$videoFileName$_outputFormatString';
+
+    _command += '"$_outputPath"';
+
+    final session = await FFmpegKit.execute(_command);
+    final state = FFmpegKitConfig.sessionStateToString(await session.getState());
+    final returnCode = await session.getReturnCode();
+
+    debugPrint("FFmpeg process exited with state $state and rc $returnCode");
+
+    if (ReturnCode.isSuccess(returnCode)) {
+      debugPrint("FFmpeg processing completed successfully.");
+      debugPrint('Video successfuly saved');
+
+      List<String> paths = [];
+      bool isExists = await File(_outputPath).exists();
+      int index = 0;
+      while (isExists) {
+        paths.add(_outputPath);
+        String tsFilePath = '$path$videoFileName${index.toString()}.ts';
+        isExists = await File(tsFilePath).exists();
+        index++;
+      }
+      return paths;
+    } else {
+      debugPrint("FFmpeg processing failed.");
+      debugPrint('Couldn\'t save the video');
+    }
+
+    return null;
+  }
+
   /// For getting the video controller state, to know whether the
   /// video is playing or paused currently.
   ///
