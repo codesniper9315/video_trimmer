@@ -377,9 +377,10 @@ class Trimmer {
       bool isExists = await File(_outputPath).exists();
       int index = 0;
       while (isExists) {
+        debugPrint(_outputPath);
         paths.add(_outputPath);
-        String tsFilePath = '$path$videoFileName${index.toString()}.ts';
-        isExists = await File(tsFilePath).exists();
+        _outputPath = '$path$videoFileName${index.toString()}.ts';
+        isExists = await File(_outputPath).exists();
         index++;
       }
       return paths;
