@@ -357,10 +357,8 @@ class Trimmer {
     _outputFormatString = outputFormat.toString();
     debugPrint('OUTPUT: $_outputFormatString');
 
-    _command = ' -i "$_videoPath" -b:v 1M -g 60 -hls_time 2 -hls_list_size 0 -hls_segment_size 500000 ';
-
+    _command = ' -i "$_videoPath" -f hls -hls_time 5 -hls_list_size 0 -force_key_frames expr:gte(t,n_forced*6) ';
     _outputPath = '$path$videoFileName$_outputFormatString';
-
     _command += '"$_outputPath"';
 
     final session = await FFmpegKit.execute(_command);
