@@ -321,7 +321,7 @@ class Trimmer {
     return null;
   }
 
-  Future<List<String>?> convertVideoToStream() async {
+  Future<Map<String, dynamic>?> convertVideoToStream() async {
     final String _videoPath = currentVideoFile!.path;
     final String _videoName = basename(_videoPath).split('.')[0];
 
@@ -381,7 +381,10 @@ class Trimmer {
         isExists = await File(_outputPath).exists();
         index++;
       }
-      return paths;
+      return {
+        'fileName': videoFileName,
+        'paths': paths,
+      };
     } else {
       debugPrint("FFmpeg processing failed.");
       debugPrint('Couldn\'t save the video');
