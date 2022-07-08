@@ -321,7 +321,7 @@ class Trimmer {
     return null;
   }
 
-  Future<Map<String, dynamic>?> convertVideoToStream() async {
+  Future<Map<String, dynamic>?> convertVideoToStream([int chunkTime = 5]) async {
     final String _videoPath = currentVideoFile!.path;
     final String _videoName = basename(_videoPath).split('.')[0];
 
@@ -357,7 +357,7 @@ class Trimmer {
     _outputFormatString = outputFormat.toString();
     debugPrint('OUTPUT: $_outputFormatString');
 
-    _command = ' -i "$_videoPath" -f hls -hls_time 5 -hls_list_size 0 -force_key_frames expr:gte(t,n_forced*6) ';
+    _command = ' -i "$_videoPath" -f hls -hls_time $chunkTime -hls_list_size 0 -force_key_frames expr:gte(t,n_forced*6) ';
     _outputPath = '$path$videoFileName$_outputFormatString';
     _command += '"$_outputPath"';
 
