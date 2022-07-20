@@ -40,6 +40,9 @@ class Trimmer {
   Future<void> loadVideo({required File videoFile}) async {
     currentVideoFile = videoFile;
     if (videoFile.existsSync()) {
+      if (_videoPlayerController != null) {
+        await _videoPlayerController!.dispose();
+      }
       _videoPlayerController = VideoPlayerController.file(currentVideoFile!);
       await _videoPlayerController!.initialize().then((_) {
         _controller.add(TrimmerEvent.initialized);
@@ -357,7 +360,8 @@ class Trimmer {
     _outputFormatString = outputFormat.toString();
     debugPrint('OUTPUT: $_outputFormatString');
 
-    _command = ' -i "$_videoPath" -f hls -hls_time $chunkTime -hls_list_size 0 -force_key_frames expr:gte(t,n_forced*6) ';
+    _command =
+        ' -i "$_videoPath" -f hls -hls_time $chunkTime -hls_list_size 0 -force_key_frames expr:gte(t,n_forced*6) ';
     _outputPath = '$path$videoFileName$_outputFormatString';
     _command += '"$_outputPath"';
 
