@@ -23,7 +23,8 @@ enum TrimmerEvent { initialized }
 class Trimmer {
   // final FlutterFFmpeg _flutterFFmpeg = FFmpegKit();
 
-  final StreamController<TrimmerEvent> _controller = StreamController<TrimmerEvent>.broadcast();
+  final StreamController<TrimmerEvent> _controller =
+      StreamController<TrimmerEvent>.broadcast();
 
   VideoPlayerController? _videoPlayerController;
 
@@ -75,7 +76,8 @@ class Trimmer {
     }
 
     // Directory + folder name
-    final Directory _directoryFolder = Directory('${_directory!.path}/$folderName/');
+    final Directory _directoryFolder =
+        Directory('${_directory!.path}/$folderName/');
 
     if (await _directoryFolder.exists()) {
       // If folder already exists return path
@@ -84,7 +86,8 @@ class Trimmer {
     } else {
       debugPrint('Creating');
       // If folder does not exists create folder and then return its path
-      final Directory _directoryNewFolder = await _directoryFolder.create(recursive: true);
+      final Directory _directoryNewFolder =
+          await _directoryFolder.create(recursive: true);
       return _directoryNewFolder.path;
     }
   }
@@ -179,7 +182,11 @@ class Trimmer {
     String _command;
 
     // Formatting Date and Time
-    String dateTime = DateFormat.yMMMd().addPattern('-').add_Hms().format(DateTime.now()).toString();
+    String dateTime = DateFormat.yMMMd()
+        .addPattern('-')
+        .add_Hms()
+        .format(DateTime.now())
+        .toString();
 
     // String _resultString;
     String _outputPath;
@@ -244,7 +251,8 @@ class Trimmer {
     _command += '"$_outputPath"';
 
     final session = await FFmpegKit.execute(_command);
-    final state = FFmpegKitConfig.sessionStateToString(await session.getState());
+    final state =
+        FFmpegKitConfig.sessionStateToString(await session.getState());
     final returnCode = await session.getReturnCode();
 
     debugPrint("FFmpeg process exited with state $state and rc $returnCode");
@@ -270,7 +278,11 @@ class Trimmer {
     String _command;
 
     // Formatting Date and Time
-    String dateTime = DateFormat.yMMMd().addPattern('-').add_Hms().format(DateTime.now()).toString();
+    String dateTime = DateFormat.yMMMd()
+        .addPattern('-')
+        .add_Hms()
+        .format(DateTime.now())
+        .toString();
 
     // String _resultString;
     String _outputPath;
@@ -306,7 +318,8 @@ class Trimmer {
     _command += '"$_outputPath"';
 
     final session = await FFmpegKit.execute(_command);
-    final state = FFmpegKitConfig.sessionStateToString(await session.getState());
+    final state =
+        FFmpegKitConfig.sessionStateToString(await session.getState());
     final returnCode = await session.getReturnCode();
 
     debugPrint("FFmpeg process exited with state $state and rc $returnCode");
@@ -324,14 +337,66 @@ class Trimmer {
     return null;
   }
 
-  Future<Map<String, dynamic>?> convertVideoToStream([int chunkTime = 5]) async {
+  Future<String?> convertStreamToVideo(String url) async {
+    String _command;
+
+    String _outputPath;
+    String _outputFormatString;
+    String videoFileName = 'video';
+    String videoFolderName = 'Converter';
+
+    String path = await _createFolderInAppDocDir(
+      videoFolderName,
+      null,
+    ).whenComplete(
+      () => debugPrint("Retrieved Converter folder"),
+    );
+
+    debugPrint(path);
+
+    FileFormat outputFormat = FileFormat.mp4;
+    _outputFormatString = outputFormat.toString();
+    debugPrint('OUTPUT: $_outputFormatString');
+
+    _command = ' -i "$url" -bsf:a aac_adtstoasc -vcodec copy -c copy -crf 50 ';
+    _outputPath = '$path$videoFileName$_outputFormatString';
+    _command += '"$_outputPath"';
+
+    final session = await FFmpegKit.execute(_command);
+    final state =
+        FFmpegKitConfig.sessionStateToString(await session.getState());
+    final returnCode = await session.getReturnCode();
+
+    debugPrint("FFmpeg process exited with state $state and rc $returnCode");
+
+    if (ReturnCode.isSuccess(returnCode)) {
+      debugPrint("FFmpeg processing completed successfully.");
+      debugPrint('Video successfuly saved');
+
+      bool isExists = await File(_outputPath).exists();
+      if (isExists) return _outputPath;
+    } else {
+      debugPrint("FFmpeg processing failed.");
+      debugPrint('Couldn\'t save the video');
+    }
+
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> convertVideoToStream([
+    int chunkTime = 5,
+  ]) async {
     final String _videoPath = currentVideoFile!.path;
     final String _videoName = basename(_videoPath).split('.')[0];
 
     String _command;
 
     // Formatting Date and Time
-    String dateTime = DateFormat.yMMMd().addPattern('-').add_Hms().format(DateTime.now()).toString();
+    String dateTime = DateFormat.yMMMd()
+        .addPattern('-')
+        .add_Hms()
+        .format(DateTime.now())
+        .toString();
 
     // String _resultString;
     String _outputPath;
@@ -341,9 +406,9 @@ class Trimmer {
     debugPrint("DateTime: $dateTime");
     debugPrint("Formatted: $formattedDateTime");
 
-    String videoFolderName = "Trimmer";
+    String videoFolderName = "Converter";
 
-    String videoFileName = "${_videoName}_trimmed:$formattedDateTime";
+    String videoFileName = "${_videoName}_converted:$formattedDateTime";
 
     videoFileName = videoFileName.replaceAll(' ', '_');
 
@@ -351,7 +416,7 @@ class Trimmer {
       videoFolderName,
       null,
     ).whenComplete(
-      () => debugPrint("Retrieved Trimmer folder"),
+      () => debugPrint("Retrieved Converter folder"),
     );
 
     debugPrint(path);
@@ -366,7 +431,8 @@ class Trimmer {
     _command += '"$_outputPath"';
 
     final session = await FFmpegKit.execute(_command);
-    final state = FFmpegKitConfig.sessionStateToString(await session.getState());
+    final state =
+        FFmpegKitConfig.sessionStateToString(await session.getState());
     final returnCode = await session.getReturnCode();
 
     debugPrint("FFmpeg process exited with state $state and rc $returnCode");
@@ -415,8 +481,10 @@ class Trimmer {
       await videoPlayerController!.pause();
       return false;
     } else {
-      if (videoPlayerController!.value.position.inMilliseconds >= endValue.toInt()) {
-        await videoPlayerController!.seekTo(Duration(milliseconds: startValue.toInt()));
+      if (videoPlayerController!.value.position.inMilliseconds >=
+          endValue.toInt()) {
+        await videoPlayerController!
+            .seekTo(Duration(milliseconds: startValue.toInt()));
         await videoPlayerController!.play();
         return true;
       } else {
