@@ -346,9 +346,11 @@ class Trimmer {
     _outputPath = '$path$videoFileName$_outputFormatString';
     _command += '"$_outputPath"';
 
+    debugPrint('COMMAND: $_command');
+
     final session = await FFmpegKit.execute(_command);
-    final sessionState = await session.getState();
-    final state = FFmpegKitConfig.sessionStateToString(sessionState);
+    final state =
+        FFmpegKitConfig.sessionStateToString(await session.getState());
     final returnCode = await session.getReturnCode();
 
     debugPrint("FFmpeg process exited with state $state and rc $returnCode");
