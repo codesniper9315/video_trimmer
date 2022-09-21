@@ -342,7 +342,7 @@ class Trimmer {
     _outputFormatString = outputFormat.toString();
     debugPrint('OUTPUT: $_outputFormatString');
 
-    _command = ' -i "$url" -bsf:a aac_adtstoasc -vcodec copy -c copy -crf 50 ';
+    _command = ' -i "$url" -c copy -bsf:a aac_adtstoasc ';
     _outputPath = '$path$videoFileName$_outputFormatString';
     _command += '"$_outputPath"';
 
