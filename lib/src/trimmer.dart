@@ -6,11 +6,12 @@ import 'package:ffmpeg_kit_flutter_min_gpl/return_code.dart';
 import 'package:path/path.dart';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
+import 'package:video_trimmer/src/entities/hls_result.dart';
 import 'package:video_trimmer/src/file_formats.dart';
 import 'package:video_trimmer/src/storage_dir.dart';
+import 'package:video_trimmer/src/entities/variant_option.dart';
 
 enum TrimmerEvent { initialized }
 
@@ -86,8 +87,7 @@ class Trimmer {
     } else {
       debugPrint('Creating');
       // If folder does not exists create folder and then return its path
-      final Directory _directoryNewFolder =
-          await _directoryFolder.create(recursive: true);
+      var _directoryNewFolder = await _directoryFolder.create(recursive: true);
       return _directoryNewFolder.path;
     }
   }
@@ -181,24 +181,16 @@ class Trimmer {
 
     String _command;
 
-    // Formatting Date and Time
-    String dateTime = DateFormat.yMMMd()
-        .addPattern('-')
-        .add_Hms()
-        .format(DateTime.now())
-        .toString();
+    // current time (milliseconds)
+    String now = DateTime.now().millisecondsSinceEpoch.toString();
 
     // String _resultString;
     String _outputPath;
     String? _outputFormatString;
-    String formattedDateTime = dateTime.replaceAll(' ', '');
-
-    debugPrint("DateTime: $dateTime");
-    debugPrint("Formatted: $formattedDateTime");
 
     videoFolderName ??= "Trimmer";
 
-    videoFileName ??= "${_videoName}_trimmed:$formattedDateTime";
+    videoFileName ??= "${_videoName}_trimmed_$now";
 
     videoFileName = videoFileName.replaceAll(' ', '_');
 
@@ -277,24 +269,16 @@ class Trimmer {
 
     String _command;
 
-    // Formatting Date and Time
-    String dateTime = DateFormat.yMMMd()
-        .addPattern('-')
-        .add_Hms()
-        .format(DateTime.now())
-        .toString();
+    // current time string
+    String now = DateTime.now().millisecondsSinceEpoch.toString();
 
     // String _resultString;
     String _outputPath;
     String? _outputFormatString;
-    String formattedDateTime = dateTime.replaceAll(' ', '');
 
-    debugPrint("DateTime: $dateTime");
-    debugPrint("Formatted: $formattedDateTime");
+    String videoFolderName = "Compress";
 
-    String videoFolderName = "Trimmer";
-
-    String videoFileName = "${_videoName}_trimmed:$formattedDateTime";
+    String videoFileName = "${_videoName}_compressed_$now";
 
     videoFileName = videoFileName.replaceAll(' ', '_');
 
@@ -337,13 +321,13 @@ class Trimmer {
     return null;
   }
 
-  Future<String?> convertStreamToVideo(String url) async {
+  Future<String?> convertM3U8ToMP4(String url) async {
     String _command;
 
     String _outputPath;
     String _outputFormatString;
     String videoFileName = 'video';
-    String videoFolderName = 'Converter';
+    String videoFolderName = 'Convert';
 
     String path = await _createFolderInAppDocDir(
       videoFolderName,
@@ -363,8 +347,8 @@ class Trimmer {
     _command += '"$_outputPath"';
 
     final session = await FFmpegKit.execute(_command);
-    final state =
-        FFmpegKitConfig.sessionStateToString(await session.getState());
+    final sessionState = await session.getState();
+    final state = FFmpegKitConfig.sessionStateToString(sessionState);
     final returnCode = await session.getReturnCode();
 
     debugPrint("FFmpeg process exited with state $state and rc $returnCode");
@@ -383,32 +367,24 @@ class Trimmer {
     return null;
   }
 
-  Future<Map<String, dynamic>?> convertVideoToStream([
-    int chunkTime = 5,
+  Future<Map<String, dynamic>?> convertMP4ToM3U8([
+    int segmentLength = 5,
   ]) async {
     final String _videoPath = currentVideoFile!.path;
     final String _videoName = basename(_videoPath).split('.')[0];
 
     String _command;
 
-    // Formatting Date and Time
-    String dateTime = DateFormat.yMMMd()
-        .addPattern('-')
-        .add_Hms()
-        .format(DateTime.now())
-        .toString();
+    // current time string
+    String now = DateTime.now().millisecondsSinceEpoch.toString();
 
     // String _resultString;
     String _outputPath;
     String? _outputFormatString;
-    String formattedDateTime = dateTime.replaceAll(' ', '');
-
-    debugPrint("DateTime: $dateTime");
-    debugPrint("Formatted: $formattedDateTime");
 
     String videoFolderName = "Converter";
 
-    String videoFileName = "${_videoName}_converted:$formattedDateTime";
+    String videoFileName = "${_videoName}_converted_$now";
 
     videoFileName = videoFileName.replaceAll(' ', '_');
 
@@ -426,7 +402,7 @@ class Trimmer {
     debugPrint('OUTPUT: $_outputFormatString');
 
     _command =
-        ' -i "$_videoPath" -f hls -hls_time $chunkTime -hls_list_size 0 -force_key_frames expr:gte(t,n_forced*6) ';
+        ' -i "$_videoPath" -f hls -hls_time $segmentLength -hls_list_size 0 -force_key_frames expr:gte(t,n_forced*6) ';
     _outputPath = '$path$videoFileName$_outputFormatString';
     _command += '"$_outputPath"';
 
@@ -455,6 +431,93 @@ class Trimmer {
         'fileName': videoFileName,
         'paths': paths,
       };
+    } else {
+      debugPrint("FFmpeg processing failed.");
+      debugPrint('Couldn\'t save the video');
+    }
+
+    return null;
+  }
+
+  Future<HLSResult?> convertMP4ToM3U8WithVariants({
+    int segmentLength = 5,
+    List<VariantOption>? variantSectors,
+  }) async {
+    variantSectors ??= options;
+    variantSectors.sort((a, b) => a.scale.compareTo(b.scale));
+
+    final String _videoPath = currentVideoFile!.path;
+    double width = _videoPlayerController!.value.size.width;
+    double height = _videoPlayerController!.value.size.height;
+
+    String _command;
+
+    // String _resultString;
+    String _outputPath;
+
+    String videoFolderName = "mp4tohlswithvariants";
+
+    String path = await _createFolderInAppDocDir(
+      videoFolderName,
+      null,
+    ).whenComplete(
+      () => debugPrint("Retrieved Converter folder"),
+    );
+
+    _outputPath = '${path}master.m3u8';
+
+    debugPrint(path);
+
+    _command = ' -i "$_videoPath"';
+    for (var _ in variantSectors) {
+      _command += ' -map 0:v:0 -map 0:a:0';
+    }
+    _command += ' -c:v libx264 -crf 22 -c:a aac -ar 48000';
+    for (var i = 0; i < variantSectors.length; i++) {
+      var item = variantSectors[i];
+      var vW = width * item.scale;
+      var vH = height * item.scale;
+      _command += ' -filter:v:$i scale=w=$vW:h=$vH';
+      _command += ' -maxrate:v:$i ${item.maxrate} -b:a:0 ${item.bitrate}';
+    }
+    _command += ' -preset slow -hls_list_size 0 -threads 0 -f hls';
+    _command += ' -hls_playlist_type event -hls_time $segmentLength';
+    _command += ' -hls_flags independent_segments';
+    _command += ' -master_pl_name "master.m3u8"';
+    _command += '"${path}stream_%v.m3u8"';
+
+    final session = await FFmpegKit.execute(_command);
+    final sessionState = await session.getState();
+    final state = FFmpegKitConfig.sessionStateToString(sessionState);
+    final returnCode = await session.getReturnCode();
+
+    debugPrint("FFmpeg process exited with state $state and rc $returnCode");
+
+    if (ReturnCode.isSuccess(returnCode)) {
+      debugPrint("FFmpeg processing completed successfully.");
+      debugPrint('Video successfuly saved');
+
+      var result = HLSResult(masterPath: _outputPath, withVariants: true);
+      List<HLSResult> variants = [];
+      for (var index = 0; index < variantSectors.length; index++) {
+        var variantMasterPath = 'stream_$index.m3u8';
+        var variant = HLSResult(masterPath: variantMasterPath);
+        List<String> paths = [];
+        for (var cIndex = 0;; cIndex++) {
+          String cPath = '${path}stream_$index$cIndex.ts';
+          bool isExists = await File(cPath).exists();
+          if (isExists) {
+            paths.add(cPath);
+          } else {
+            break;
+          }
+        }
+        variant.chunkPaths = paths;
+        variants.add(variant);
+      }
+      result.variants = variants;
+
+      return result;
     } else {
       debugPrint("FFmpeg processing failed.");
       debugPrint('Couldn\'t save the video');
@@ -496,6 +559,9 @@ class Trimmer {
 
   /// Clean up
   void dispose() {
+    if (_videoPlayerController != null) {
+      _videoPlayerController!.dispose();
+    }
     _controller.close();
   }
 }
