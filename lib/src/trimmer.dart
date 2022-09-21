@@ -326,7 +326,9 @@ class Trimmer {
 
     String _outputPath;
     String _outputFormatString;
-    String videoFileName = 'video';
+
+    String now = DateTime.now().millisecondsSinceEpoch.toString();
+    String videoFileName = 'video_$now';
     String videoFolderName = 'Convert';
 
     String path = await _createFolderInAppDocDir(
