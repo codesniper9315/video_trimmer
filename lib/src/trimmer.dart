@@ -322,6 +322,8 @@ class Trimmer {
   }
 
   Future<String?> convertM3U8ToMP4(String url) async {
+    _controller.add(TrimmerEvent.initialized);
+
     String _command;
 
     String _outputPath;
