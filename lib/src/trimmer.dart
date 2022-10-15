@@ -294,7 +294,7 @@ class Trimmer {
 
     debugPrint(path);
 
-    FileFormat outputFormat = FileFormat.mp4;
+    FileFormat outputFormat = format;
     _outputFormatString = outputFormat.toString();
     debugPrint('OUTPUT: $_outputFormatString');
 
