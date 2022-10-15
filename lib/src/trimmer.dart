@@ -263,7 +263,10 @@ class Trimmer {
     return null;
   }
 
-  Future<String?> saveCompressedVideo(String formatCommand) async {
+  Future<String?> convertVideo(
+    String formatCommand, [
+    FileFormat format = FileFormat.mp4,
+  ]) async {
     final String _videoPath = currentVideoFile!.path;
     final String _videoName = basename(_videoPath).split('.')[0];
 
