@@ -265,9 +265,15 @@ class Trimmer {
 
   Future<String?> convertVideo(
     String formatCommand, [
+    String? input,
     FileFormat format = FileFormat.mp4,
   ]) async {
-    final String _videoPath = currentVideoFile!.path;
+    if (input == null && currentVideoFile == null) {
+      debugPrint('Please provide the input file or preload');
+      return null;
+    }
+
+    final String _videoPath = input ?? currentVideoFile!.path;
     final String _videoName = basename(_videoPath).split('.')[0];
 
     String _command;
