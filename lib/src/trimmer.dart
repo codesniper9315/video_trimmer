@@ -39,12 +39,20 @@ class Trimmer {
   /// Loads a video using the path provided.
   ///
   /// Returns the loaded video file.
-  Future<void> loadVideo({required File videoFile}) async {
+  Future<void> loadVideo({required File videoFile, bool tsFile = false}) async {
     currentVideoFile = videoFile;
     if (videoFile.existsSync()) {
       if (_videoPlayerController != null) {
         await _videoPlayerController!.dispose();
       }
+
+      // if the input file is ts on iOS
+      // initialize directly due to not able to play it on iOS directly
+      if (Platform.isIOS && tsFile) {
+        _controller.add(TrimmerEvent.initialized);
+        return;
+      }
+
       _videoPlayerController = VideoPlayerController.file(currentVideoFile!);
       await _videoPlayerController!.initialize().then((_) {
         _controller.add(TrimmerEvent.initialized);
@@ -265,15 +273,9 @@ class Trimmer {
 
   Future<String?> convertVideo(
     String formatCommand, [
-    String? input,
     FileFormat format = FileFormat.mp4,
   ]) async {
-    if (input == null && currentVideoFile == null) {
-      debugPrint('Please provide the input file or preload');
-      return null;
-    }
-
-    final String _videoPath = input ?? currentVideoFile!.path;
+    final String _videoPath = currentVideoFile!.path;
     final String _videoName = basename(_videoPath).split('.')[0];
 
     String _command;
