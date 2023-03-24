@@ -574,6 +574,12 @@ class Trimmer {
     }
   }
 
+  void disposeVideo() {
+    if (_videoPlayerController != null) {
+      _videoPlayerController!.dispose();
+    }
+  }
+
   /// Clean up
   void dispose() {
     if (_videoPlayerController != null) {
