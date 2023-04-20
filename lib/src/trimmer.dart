@@ -278,14 +278,14 @@ class Trimmer {
     final String videoPath = currentVideoFile!.path;
     final String videoName = basename(videoPath).split('.')[0];
 
-    String _command;
+    String command;
 
     // current time string
     String now = DateTime.now().millisecondsSinceEpoch.toString();
 
     // String _resultString;
-    String _outputPath;
-    String? _outputFormatString;
+    String outputPath;
+    String? outputFormatString;
 
     String videoFolderName = "Compress";
 
@@ -303,16 +303,16 @@ class Trimmer {
     debugPrint(path);
 
     FileFormat outputFormat = format;
-    _outputFormatString = outputFormat.toString();
-    debugPrint('OUTPUT: $_outputFormatString');
+    outputFormatString = outputFormat.toString();
+    debugPrint('OUTPUT: $outputFormatString');
 
-    _command = ' -i "$videoPath" $formatCommand ';
+    command = ' -i "$videoPath" $formatCommand ';
 
-    _outputPath = '$path$videoFileName$_outputFormatString';
+    outputPath = '$path$videoFileName$outputFormatString';
 
-    _command += '"$_outputPath"';
+    command += '"$outputPath"';
 
-    final session = await FFmpegKit.execute(_command);
+    final session = await FFmpegKit.execute(command);
     final state =
         FFmpegKitConfig.sessionStateToString(await session.getState());
     final returnCode = await session.getReturnCode();
@@ -323,7 +323,7 @@ class Trimmer {
       debugPrint("FFmpeg processing completed successfully.");
       debugPrint('Video successfuly saved');
       // onSave(_outputPath);
-      return _outputPath;
+      return outputPath;
     } else {
       debugPrint("FFmpeg processing failed.");
       debugPrint('Couldn\'t save the video');
@@ -335,10 +335,10 @@ class Trimmer {
   Future<String?> convertM3U8ToMP4(String url) async {
     _controller.add(TrimmerEvent.initialized);
 
-    String _command;
+    String command;
 
-    String _outputPath;
-    String _outputFormatString;
+    String outputPath;
+    String outputFormatString;
 
     String now = DateTime.now().millisecondsSinceEpoch.toString();
     String videoFileName = 'video_$now';
@@ -354,16 +354,16 @@ class Trimmer {
     debugPrint(path);
 
     FileFormat outputFormat = FileFormat.mp4;
-    _outputFormatString = outputFormat.toString();
-    debugPrint('OUTPUT: $_outputFormatString');
+    outputFormatString = outputFormat.toString();
+    debugPrint('OUTPUT: $outputFormatString');
 
-    _command = '-i "$url" -c copy -bsf:a aac_adtstoasc ';
-    _outputPath = '$path$videoFileName$_outputFormatString';
-    _command += '"$_outputPath"';
+    command = '-i "$url" -c copy -bsf:a aac_adtstoasc ';
+    outputPath = '$path$videoFileName$outputFormatString';
+    command += '"$outputPath"';
 
-    debugPrint('COMMAND: $_command');
+    debugPrint('COMMAND: $command');
 
-    final session = await FFmpegKit.execute(_command);
+    final session = await FFmpegKit.execute(command);
     final state =
         FFmpegKitConfig.sessionStateToString(await session.getState());
     final returnCode = await session.getReturnCode();
@@ -374,8 +374,8 @@ class Trimmer {
       debugPrint("FFmpeg processing completed successfully.");
       debugPrint('Video successfuly saved');
 
-      bool isExists = await File(_outputPath).exists();
-      if (isExists) return _outputPath;
+      bool isExists = await File(outputPath).exists();
+      if (isExists) return outputPath;
     } else {
       debugPrint("FFmpeg processing failed.");
       debugPrint('Couldn\'t save the video');
@@ -387,21 +387,21 @@ class Trimmer {
   Future<Map<String, dynamic>?> convertMP4ToM3U8([
     int segmentLength = 5,
   ]) async {
-    final String _videoPath = currentVideoFile!.path;
-    final String _videoName = basename(_videoPath).split('.')[0];
+    final String videoPath = currentVideoFile!.path;
+    final String videoName = basename(videoPath).split('.')[0];
 
-    String _command;
+    String command;
 
     // current time string
     String now = DateTime.now().millisecondsSinceEpoch.toString();
 
     // String _resultString;
-    String _outputPath;
-    String? _outputFormatString;
+    String outputPath;
+    String? outputFormatString;
 
     String videoFolderName = "Converter";
 
-    String videoFileName = "${_videoName}_converted_$now";
+    String videoFileName = "${videoName}_converted_$now";
 
     videoFileName = videoFileName.replaceAll(' ', '_');
 
@@ -415,15 +415,15 @@ class Trimmer {
     debugPrint(path);
 
     FileFormat outputFormat = FileFormat.m3u8;
-    _outputFormatString = outputFormat.toString();
-    debugPrint('OUTPUT: $_outputFormatString');
+    outputFormatString = outputFormat.toString();
+    debugPrint('OUTPUT: $outputFormatString');
 
-    _command =
-        ' -i "$_videoPath" -f hls -hls_time $segmentLength -hls_list_size 0 -force_key_frames expr:gte(t,n_forced*6) ';
-    _outputPath = '$path$videoFileName$_outputFormatString';
-    _command += '"$_outputPath"';
+    command =
+        ' -i "$videoPath" -f hls -hls_time $segmentLength -hls_list_size 0 -force_key_frames expr:gte(t,n_forced*6) ';
+    outputPath = '$path$videoFileName$outputFormatString';
+    command += '"$outputPath"';
 
-    final session = await FFmpegKit.execute(_command);
+    final session = await FFmpegKit.execute(command);
     final state =
         FFmpegKitConfig.sessionStateToString(await session.getState());
     final returnCode = await session.getReturnCode();
@@ -435,13 +435,13 @@ class Trimmer {
       debugPrint('Video successfuly saved');
 
       List<String> paths = [];
-      bool isExists = await File(_outputPath).exists();
+      bool isExists = await File(outputPath).exists();
       int index = 0;
       while (isExists) {
-        debugPrint(_outputPath);
-        paths.add(_outputPath);
-        _outputPath = '$path$videoFileName${index.toString()}.ts';
-        isExists = await File(_outputPath).exists();
+        debugPrint(outputPath);
+        paths.add(outputPath);
+        outputPath = '$path$videoFileName${index.toString()}.ts';
+        isExists = await File(outputPath).exists();
         index++;
       }
       return {
@@ -463,14 +463,14 @@ class Trimmer {
     variantSectors ??= options;
     variantSectors.sort((a, b) => a.scale.compareTo(b.scale));
 
-    final String _videoPath = currentVideoFile!.path;
+    final String videoPath = currentVideoFile!.path;
     double width = _videoPlayerController!.value.size.width;
     double height = _videoPlayerController!.value.size.height;
 
-    String _command;
+    String command;
 
     // String _resultString;
-    String _outputPath;
+    String outputPath;
 
     String videoFolderName = "mp4tohlswithvariants";
 
@@ -481,29 +481,29 @@ class Trimmer {
       () => debugPrint("Retrieved Converter folder"),
     );
 
-    _outputPath = '${path}master.m3u8';
+    outputPath = '${path}master.m3u8';
 
     debugPrint(path);
 
-    _command = ' -i "$_videoPath"';
+    command = ' -i "$videoPath"';
     for (var _ in variantSectors) {
-      _command += ' -map 0:v:0 -map 0:a:0';
+      command += ' -map 0:v:0 -map 0:a:0';
     }
-    _command += ' -c:v libx264 -crf 22 -c:a aac -ar 48000';
+    command += ' -c:v libx264 -crf 22 -c:a aac -ar 48000';
     for (var i = 0; i < variantSectors.length; i++) {
       var item = variantSectors[i];
       var vW = width * item.scale;
       var vH = height * item.scale;
-      _command += ' -filter:v:$i scale=w=$vW:h=$vH';
-      _command += ' -maxrate:v:$i ${item.maxrate} -b:a:0 ${item.bitrate}';
+      command += ' -filter:v:$i scale=w=$vW:h=$vH';
+      command += ' -maxrate:v:$i ${item.maxrate} -b:a:0 ${item.bitrate}';
     }
-    _command += ' -preset slow -hls_list_size 0 -threads 0 -f hls';
-    _command += ' -hls_playlist_type event -hls_time $segmentLength';
-    _command += ' -hls_flags independent_segments';
-    _command += ' -master_pl_name "master.m3u8"';
-    _command += '"${path}stream_%v.m3u8"';
+    command += ' -preset slow -hls_list_size 0 -threads 0 -f hls';
+    command += ' -hls_playlist_type event -hls_time $segmentLength';
+    command += ' -hls_flags independent_segments';
+    command += ' -master_pl_name "master.m3u8"';
+    command += '"${path}stream_%v.m3u8"';
 
-    final session = await FFmpegKit.execute(_command);
+    final session = await FFmpegKit.execute(command);
     final sessionState = await session.getState();
     final state = FFmpegKitConfig.sessionStateToString(sessionState);
     final returnCode = await session.getReturnCode();
@@ -514,7 +514,7 @@ class Trimmer {
       debugPrint("FFmpeg processing completed successfully.");
       debugPrint('Video successfuly saved');
 
-      var result = HLSResult(masterPath: _outputPath, withVariants: true);
+      var result = HLSResult(masterPath: outputPath, withVariants: true);
       List<HLSResult> variants = [];
       for (var index = 0; index < variantSectors.length; index++) {
         var variantMasterPath = 'stream_$index.m3u8';
