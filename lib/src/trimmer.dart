@@ -64,39 +64,39 @@ class Trimmer {
     String folderName,
     StorageDir? storageDir,
   ) async {
-    Directory? _directory;
+    Directory? directory;
 
     if (storageDir == null) {
-      _directory = await getApplicationDocumentsDirectory();
+      directory = await getApplicationDocumentsDirectory();
     } else {
       switch (storageDir.toString()) {
         case 'temporaryDirectory':
-          _directory = await getTemporaryDirectory();
+          directory = await getTemporaryDirectory();
           break;
 
         case 'applicationDocumentsDirectory':
-          _directory = await getApplicationDocumentsDirectory();
+          directory = await getApplicationDocumentsDirectory();
           break;
 
         case 'externalStorageDirectory':
-          _directory = await getExternalStorageDirectory();
+          directory = await getExternalStorageDirectory();
           break;
       }
     }
 
     // Directory + folder name
-    final Directory _directoryFolder =
-        Directory('${_directory!.path}/$folderName/');
+    final Directory directoryFolder =
+        Directory('${directory!.path}/$folderName/');
 
-    if (await _directoryFolder.exists()) {
+    if (await directoryFolder.exists()) {
       // If folder already exists return path
       debugPrint('Exists');
-      return _directoryFolder.path;
+      return directoryFolder.path;
     } else {
       debugPrint('Creating');
       // If folder does not exists create folder and then return its path
-      var _directoryNewFolder = await _directoryFolder.create(recursive: true);
-      return _directoryNewFolder.path;
+      var directoryNewFolder = await directoryFolder.create(recursive: true);
+      return directoryNewFolder.path;
     }
   }
 
@@ -184,21 +184,21 @@ class Trimmer {
     String? videoFileName,
     StorageDir? storageDir,
   }) async {
-    final String _videoPath = currentVideoFile!.path;
-    final String _videoName = basename(_videoPath).split('.')[0];
+    final String videoPath = currentVideoFile!.path;
+    final String videoName = basename(videoPath).split('.')[0];
 
-    String _command;
+    String command;
 
     // current time (milliseconds)
     String now = DateTime.now().millisecondsSinceEpoch.toString();
 
     // String _resultString;
-    String _outputPath;
-    String? _outputFormatString;
+    String outputPath;
+    String? outputFormatString;
 
     videoFolderName ??= "Trimmer";
 
-    videoFileName ??= "${_videoName}_trimmed_$now";
+    videoFileName ??= "${videoName}_trimmed_$now";
 
     videoFileName = videoFileName.replaceAll(' ', '_');
 
@@ -219,38 +219,38 @@ class Trimmer {
 
     if (outputFormat == null) {
       outputFormat = FileFormat.mp4;
-      _outputFormatString = outputFormat.toString();
-      debugPrint('OUTPUT: $_outputFormatString');
+      outputFormatString = outputFormat.toString();
+      debugPrint('OUTPUT: $outputFormatString');
     } else {
-      _outputFormatString = outputFormat.toString();
+      outputFormatString = outputFormat.toString();
     }
 
-    String _trimLengthCommand =
-        ' -ss $startPoint -i "$_videoPath" -t ${endPoint - startPoint} -avoid_negative_ts make_zero ';
+    String trimLengthCommand =
+        ' -ss $startPoint -i "$videoPath" -t ${endPoint - startPoint} -avoid_negative_ts make_zero ';
 
     if (ffmpegCommand == null) {
-      _command = '$_trimLengthCommand -c:a copy ';
+      command = '$trimLengthCommand -c:a copy ';
 
       if (!applyVideoEncoding) {
-        _command += '-c:v copy ';
+        command += '-c:v copy ';
       }
 
       if (outputFormat == FileFormat.gif) {
         fpsGIF ??= 10;
         scaleGIF ??= 480;
-        _command =
-            '$_trimLengthCommand -vf "fps=$fpsGIF,scale=$scaleGIF:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 ';
+        command =
+            '$trimLengthCommand -vf "fps=$fpsGIF,scale=$scaleGIF:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 ';
       }
     } else {
-      _command = '$_trimLengthCommand $ffmpegCommand ';
-      _outputFormatString = customVideoFormat;
+      command = '$trimLengthCommand $ffmpegCommand ';
+      outputFormatString = customVideoFormat;
     }
 
-    _outputPath = '$path$videoFileName$_outputFormatString';
+    outputPath = '$path$videoFileName$outputFormatString';
 
-    _command += '"$_outputPath"';
+    command += '"$outputPath"';
 
-    final session = await FFmpegKit.execute(_command);
+    final session = await FFmpegKit.execute(command);
     final state =
         FFmpegKitConfig.sessionStateToString(await session.getState());
     final returnCode = await session.getReturnCode();
@@ -261,7 +261,7 @@ class Trimmer {
       debugPrint("FFmpeg processing completed successfully.");
       debugPrint('Video successfuly saved');
       // onSave(_outputPath);
-      return _outputPath;
+      return outputPath;
     } else {
       debugPrint("FFmpeg processing failed.");
       debugPrint('Couldn\'t save the video');
@@ -275,8 +275,8 @@ class Trimmer {
     String formatCommand, [
     FileFormat format = FileFormat.mp4,
   ]) async {
-    final String _videoPath = currentVideoFile!.path;
-    final String _videoName = basename(_videoPath).split('.')[0];
+    final String videoPath = currentVideoFile!.path;
+    final String videoName = basename(videoPath).split('.')[0];
 
     String _command;
 
@@ -289,7 +289,7 @@ class Trimmer {
 
     String videoFolderName = "Compress";
 
-    String videoFileName = "${_videoName}_compressed_$now";
+    String videoFileName = "${videoName}_compressed_$now";
 
     videoFileName = videoFileName.replaceAll(' ', '_');
 
@@ -306,7 +306,7 @@ class Trimmer {
     _outputFormatString = outputFormat.toString();
     debugPrint('OUTPUT: $_outputFormatString');
 
-    _command = ' -i "$_videoPath" $formatCommand ';
+    _command = ' -i "$videoPath" $formatCommand ';
 
     _outputPath = '$path$videoFileName$_outputFormatString';
 

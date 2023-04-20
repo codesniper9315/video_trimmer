@@ -10,17 +10,17 @@ dependencies:
   flutter:
     sdk: flutter
 
-  video_player: ^2.2.18
-  ffmpeg_kit_flutter_min_gpl: ^4.5.1-LTS
-  video_thumbnail: ^0.4.3
-  path_provider: ^2.0.9
-  intl: ^0.17.0
-  path: ^1.8.0
+  video_player: ^2.6.1
+  ffmpeg_kit_flutter_min_gpl: ^5.1.0-LTS
+  video_thumbnail: ^0.5.3
+  path_provider: ^2.0.14
+  intl: ^0.18.1
+  path: ^1.8.2
 
 dev_dependencies:
-  flutter_lints: ^1.0.4
+  flutter_lints: ^2.0.1
   flutter_test:
     sdk: flutter
-  lints: ^1.0.1
+  lints: ^2.0.1
 
 flutter:
